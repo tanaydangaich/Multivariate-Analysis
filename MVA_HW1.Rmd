@@ -1,0 +1,55 @@
+---
+title: "MVA_HW1"
+output: html_document
+date: "2023-02-05"
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Tanay Dangaich
+
+#import libraries
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(ggcorrplot)
+
+#read csv file and store in sparr
+Bumpus_sparrows <- read_csv("~/Documents/Courses/Multivariate Analysis/Bumpus_sparrows.csv")
+Bumpus_sparrows
+sparr <- Bumpus_sparrows
+sparr
+
+#survived sparrows matrix, colMeans, covariance and correlation
+sur_sp = filter(sparr, Survivorship == "S")
+sur_sp.nums <- sur_sp[,-1]
+sur_sp.nums
+
+#colMeans
+colMeans(sur_sp.nums)
+#covariance
+cov(sur_sp.nums)
+#correlation
+cor_sur <- cor(sur_sp.nums)
+cor_sur
+ggcorrplot(cor_sur)
+
+#not survived sparrows matrix, colMeans, covariance and correlation
+not_sur_sp = filter(sparr, Survivorship == "NS")
+not_sur_sp.nums <- not_sur_sp[,-1]
+not_sur_sp.nums
+
+#colMeans
+colMeans(not_sur_sp.nums)
+#covariance
+cov_not_sur <- cov(not_sur_sp.nums)
+cov_not_sur
+
+#correlation
+cor_not_sur <- cor(not_sur_sp.nums)
+cor_not_sur
+ggcorrplot(cor_not_sur)
+
+
+```
