@@ -1,0 +1,142 @@
+---
+title: "MVA_HW2 Tanay Dangaich"
+output: html_document
+date: "2023-02-13"
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(ggplot2)
+sparrows <- read_csv("~/Documents/Courses/Multivariate Analysis/Bumpus_sparrows.csv")
+str(sparrows)
+
+boxplot(sparrows[,2:6])
+
+stars(sparrows,labels = sparrows$Survivorship)
+
+
+library(SciViews)
+library(scatterplot3d)
+library(car)
+library(GGally)
+library(lattice)
+library(ggplot2)
+library(ggridges)
+library(ggvis)
+library(ggthemes)
+library(cowplot)
+library(gapminder)
+library(gganimate)
+library(dplyr)
+library(tidyverse)
+library(grid)
+library(gridExtra)
+library(RColorBrewer)
+library(hexbin)
+attach(sparrows)
+names(sparrows)
+
+ggscatmat(sparrows, columns=2:6, color="Survivorship")
+
+# ggplot
+#Using ggplot to plot different variables against survivorship of birds
+ggplot(sparrows, aes(x=Survivorship,y=Total_length)) + geom_point(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship,y=Alar_extent)) + geom_point(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship,y=L_beak_head)) + geom_point(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship,y=L_humerous)) + geom_point(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship,y=L_keel_sternum)) + geom_point(aes(color=Survivorship))
+
+
+
+
+
+ggplot(sparrows, aes(x=Total_length,y=Survivorship)) + facet_wrap(Alar_extent) + geom_point()
+
+ggplot(sparrows, aes(x=Total_length, y=Alar_extent)) + geom_point(aes(color=Survivorship))
+
+ggplot(sparrows, aes(x=Total_length,y=Alar_extent)) + xlim(145,170) + geom_point(aes(color=Survivorship), pch=17) + 
+  labs(x="Total length of Bird", y="Length of Alar Extent", title="Sparrow Data") 
+
+
+
+
+
+# bar chart
+ggplot(sparrows, aes(Total_length)) + geom_bar(position="stack",aes(color=Survivorship)) 
+ggplot(sparrows, aes(Alar_extent)) + geom_bar(position="stack",aes(color=Survivorship))
+ggplot(sparrows, aes(L_beak_head)) + geom_bar(position="stack",aes(color=Survivorship))
+ggplot(sparrows, aes(L_humerous)) + geom_bar(position="stack",aes(color=Survivorship))
+ggplot(sparrows, aes(L_keel_sternum)) + geom_bar(position="stack",aes(color=Survivorship))
+
+ggplot(sparrows, aes(Total_length)) + facet_grid(.~Survivorship) + geom_bar(position="dodge",aes(color=Survivorship))
+ggplot(sparrows, aes(Alar_extent)) + facet_grid(.~Survivorship) + geom_bar(position="dodge",aes(color=Survivorship))
+ggplot(sparrows, aes(L_beak_head)) + facet_grid(.~Survivorship) + geom_bar(position="dodge",aes(color=Survivorship))
+ggplot(sparrows, aes(L_humerous)) + facet_grid(.~Survivorship) + geom_bar(position="dodge",aes(color=Survivorship))
+ggplot(sparrows, aes(L_keel_sternum)) + facet_grid(.~Survivorship) + geom_bar(position="dodge",aes(color=Survivorship))
+
+
+
+
+# histogram
+ggplot(sparrows, aes(Total_length))+geom_histogram(aes(color=Survivorship))
+ggplot(sparrows, aes(Alar_extent))+geom_histogram(aes(fill = after_stat(count)))
+ggplot(sparrows, aes(L_humerous))+geom_histogram(aes(fill = after_stat(count)))
+
+
+
+
+# violin plot 
+ggplot(sparrows, aes(x=Survivorship, y=Total_length)) + geom_violin(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=Alar_extent)) + geom_violin(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=L_beak_head)) + geom_violin(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=L_humerous)) + geom_violin(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=L_keel_sternum)) + geom_violin(aes(color=Survivorship))
+
+
+
+
+
+# box plot
+ggplot(sparrows, aes(x=Survivorship, y=Total_length)) + geom_boxplot(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=Alar_extent)) + geom_boxplot(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=L_beak_head)) + geom_boxplot(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=L_humerous)) + geom_boxplot(aes(color=Survivorship))
+ggplot(sparrows, aes(x=Survivorship, y=L_keel_sternum)) + geom_boxplot(aes(color=Survivorship))
+
+
+
+
+# density plot and ggridges
+ggplot(sparrows, aes(x=Total_length, fill=Survivorship, color=Survivorship)) + geom_density(alpha=0.3, aes(y=..scaled..)) 
+
+ggplot(sparrows, aes(x=Total_length, y=Survivorship)) + geom_density_ridges(aes(fill=Survivorship, color=Survivorship))
+
+
+
+# hexbin
+ggplot(sparrows, aes(x=Total_length, y=Survivorship)) + geom_hex(aes(color=Survivorship)) 
+
+
+
+
+# with ggthemes (see also ggsci, ggthemr)
+lastplot <- ggplot(sparrows, aes(x=Total_length,y=Alar_extent)) + xlim(145,170) + geom_point(aes(color=Survivorship), pch=18) + 
+  labs(x="Total length of Bird", y="Length of Alar Extent", title="Sparrow Data") 
+
+lastplot + theme_bw()
+lastplot + theme_cowplot()
+lastplot + theme_dark()
+lastplot + theme_economist()
+lastplot + theme_fivethirtyeight()
+lastplot + theme_tufte()
+lastplot + theme_wsj()
+```
+
+
+>Inference: 
+>  This markdown did not need any more amount of inferences as they all point out to the same thing. Hence I have created a overall inference of all the plots.
+>  From these compilation of plots, the common point is that the sparrows on the extreme ends on either side, are dead.
+>  All the sparrows which have survived lie in the middle range (i.e. average range) on the distribution. 
+
+
