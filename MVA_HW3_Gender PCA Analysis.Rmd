@@ -1,0 +1,608 @@
+---
+title: "Gender Dataset PCA analysis"
+output: html_document
+date: "2023-02-15"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Tanay Dangaich
+
+#import libraries
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(ggcorrplot)
+
+#read csv file and store in sparr
+gender <- read_csv("~/Documents/Courses/Multivariate Analysis/gender.csv")
+gender
+#male matrix, colMeans, covariance and correlation
+
+
+df <- as.data.frame(gender)
+View(df)
+
+df_1 = df
+df_1 = df_1[, -9:-10]
+df_1 = df_1[, -5:-7]
+View(df_1)
+
+male = filter(df_1, Gender == "male")
+male.nums <- male[,-1]
+View(male.nums)
+
+#colMeans
+colMeans(male.nums)
+#covariance
+cov(male.nums)
+#correlation
+cor_male <- cor(male.nums)
+cor_male
+ggcorrplot(cor_male)
+```
+
+
+>Inference:
+>The height and weight are highly correlated for males.
+>Income and age are correlated, the higher the age, the more they are earning.
+>Age and weight also have a positive correlation.
+
+
+
+```{r}
+#female matrix, colMeans, covariance and correlation
+female = filter(df_1, Gender == "female")
+female.nums <- df_1[,-1]
+View(female.nums)
+
+#colMeans
+colMeans(female.nums)
+#covariance
+cov_female <- cov(female.nums)
+cov_female
+
+#correlation
+cor_female <- cor(female.nums)
+cor_female
+ggcorrplot(cor_female)
+```
+
+
+
+>Inference:
+>The height and weight are highly correlated for females.
+>Income and age are correlated, the higher the age, the more they are earning.
+>Age and weight also have a positive correlation.
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(ggplot2)
+gender <- read_csv("~/Documents/Courses/Multivariate Analysis/gender.csv")
+str(gender)
+
+
+df <- as.data.frame(gender)
+View(df)
+
+df_1 = df
+df_1 = df_1[, -9:-10]
+df_1 = df_1[, -5:-7]
+View(df_1)
+
+library(tidyverse)
+
+df_1 <- df_1 %>% 
+  mutate(
+    Gender = ifelse(Gender %in% c("male"), "M", "W") 
+  )
+
+View(df_1)
+
+boxplot(df_1[,2:5])
+
+stars(df_1,labels = df_1$Gender)
+
+
+library(SciViews)
+library(scatterplot3d)
+library(car)
+library(GGally)
+library(lattice)
+library(ggplot2)
+library(ggridges)
+library(ggvis)
+library(ggthemes)
+library(cowplot)
+library(gapminder)
+library(gganimate)
+library(dplyr)
+library(tidyverse)
+library(grid)
+library(gridExtra)
+library(RColorBrewer)
+library(hexbin)
+names(df_1)
+
+ggscatmat(df_1, columns=2:5, color="Gender")
+
+# ggplot
+#Using ggplot to plot different variables against survivorship of birds
+ggplot(df_1, aes(x=Gender,y=Age)) + geom_point(aes(color=Gender))
+ggplot(df_1, aes(x=Gender,y=`Height (cm)`)) + geom_point(aes(color=Gender))
+ggplot(df_1, aes(x=Gender,y=`Weight (kg)`)) + geom_point(aes(color=Gender))
+ggplot(df_1, aes(x=Gender,y=`Income (USD)`)) + geom_point(aes(color=Gender))
+
+
+
+ggplot(df_1, aes(x=Age, y=`Income (USD)`)) + geom_point(aes(color=Gender))
+
+ggplot(df_1, aes(x=Age,y=`Income (USD)`)) + geom_point(aes(color=Gender), pch=17) + 
+  labs(x="Age", y="Income in USD", title="Gender data") 
+
+
+
+
+
+# bar chart
+ggplot(df_1, aes(Age)) + geom_bar(position="stack",aes(color=Gender)) 
+ggplot(df_1, aes(`Height (cm)`)) + geom_bar(position="stack",aes(color=Gender))
+ggplot(df_1, aes(`Weight (kg)`)) + geom_bar(position="stack",aes(color=Gender))
+ggplot(df_1, aes(`Income (USD)`)) + geom_bar(position="stack",aes(color=Gender))
+
+ggplot(df_1, aes(Age)) + facet_grid(.~Gender) + geom_bar(position="dodge",aes(color=Gender))
+ggplot(df_1, aes(`Height (cm)`)) + facet_grid(.~Gender) + geom_bar(position="dodge",aes(color=Gender))
+ggplot(df_1, aes(`Weight (kg)`)) + facet_grid(.~Gender) + geom_bar(position="dodge",aes(color=Gender))
+ggplot(df_1, aes(`Income (USD)`)) + facet_grid(.~Gender) + geom_bar(position="dodge",aes(color=Gender))
+
+
+
+# histogram
+ggplot(df_1, aes(Age))+geom_histogram(aes(color=Gender))
+ggplot(df_1, aes(`Height (cm)`))+geom_histogram(aes(fill = after_stat(count)))
+ggplot(df_1, aes(`Weight (kg)`))+geom_histogram(aes(fill = after_stat(count)))
+
+
+
+
+# violin plot 
+ggplot(df_1, aes(x=Gender, y=Age)) + geom_violin(aes(color=Gender))
+ggplot(df_1, aes(x=Gender, y=`Height (cm)`)) + geom_violin(aes(color=Gender))
+ggplot(df_1, aes(x=Gender, y=`Weight (kg)`)) + geom_violin(aes(color=Gender))
+ggplot(df_1, aes(x=Gender, y=`Income (USD)`)) + geom_violin(aes(color=Gender))
+
+
+
+# box plot
+ggplot(df_1, aes(x=Gender, y=Age)) + geom_boxplot(aes(color=Gender))
+ggplot(df_1, aes(x=Gender, y=`Height (cm)`)) + geom_boxplot(aes(color=Gender))
+ggplot(df_1, aes(x=Gender, y=`Weight (kg)`)) + geom_boxplot(aes(color=Gender))
+ggplot(df_1, aes(x=Gender, y=`Income (USD)`)) + geom_boxplot(aes(color=Gender))
+
+
+
+# density plot and ggridges
+ggplot(df_1, aes(x=Age, fill=Gender, color=Gender)) + geom_density(alpha=0.3, aes(y=..scaled..)) 
+
+ggplot(df_1, aes(x=Age, y=Gender)) + geom_density_ridges(aes(fill=Gender, color=Gender))
+
+
+
+# hexbin
+ggplot(df_1, aes(x=Age, y=Gender)) + geom_hex(aes(color=Gender)) 
+
+
+
+
+# with ggthemes (see also ggsci, ggthemr)
+lastplot <- ggplot(df_1, aes(x=Age,y=`Income (USD)`)) + geom_point(aes(color=Gender), pch=18) + 
+  labs(x="Age", y="Income (USD)", title="Gender Data") 
+
+lastplot + theme_bw()
+lastplot + theme_cowplot()
+lastplot + theme_dark()
+lastplot + theme_economist()
+lastplot + theme_fivethirtyeight()
+lastplot + theme_tufte()
+lastplot + theme_wsj()
+```
+
+
+>Inference:
+>The height and weight are highly correlated for females.
+>Income and age are correlated, the higher the age, the more they are earning.
+>Age and weight also have a positive correlation.
+
+
+```{r}
+library(readr)
+library(caret)
+
+gender <- read_csv("~/Documents/Courses/Multivariate Analysis/gender.csv")
+str(gender)
+attach(gender)
+View(gender)
+
+df <- as.data.frame(gender)
+View(df)
+
+df_1 = df
+df_1 = df_1[, -9:-10]
+df_1 = df_1[, -5:-7]
+View(df_1)
+
+#dmy <- dummyVars(" ~ .", data = df_1)
+#trsf <- data.frame(predict(dmy, newdata = df_1))
+#View(trsf) 
+
+#Get the Correlations between the measurements
+cor(df_1[-1])
+# Using prcomp to compute the principal components (eigenvalues and eigenvectors). With scale=TRUE, variable means are set to zero, and variances set to one
+gender_pca <- prcomp(df_1[,-1],scale=TRUE)
+gender_pca
+summary(gender_pca)
+# sample scores stored in sparrows_pca$x
+# singular values (square roots of eigenvalues) stored in sparrow_pca$sdev
+# loadings (eigenvectors) are stored in sparrows_pca$rotation
+# variable means stored in sparrows_pca$center
+# variable standard deviations stored in sparrows_pca$scale
+# A table containing eigenvalues and %'s accounted, follows
+# Eigenvalues are sdev^2
+(eigen_gender <- gender_pca$sdev^2)
+names(eigen_gender) <- paste("PC",1:4,sep="")
+eigen_gender
+sumlambdas <- sum(eigen_gender)
+sumlambdas
+propvar <- eigen_gender/sumlambdas
+propvar
+cumvar_gender <- cumsum(propvar)
+cumvar_gender
+matlambdas <- rbind(eigen_gender,propvar,cumvar_gender)
+matlambdas
+
+rownames(matlambdas) <- c("Eigenvalues","Prop. variance","Cum. prop. variance")
+matlambdas
+round(matlambdas,4)
+summary(gender_pca)
+gender_pca$rotation
+print(gender_pca)
+## Sample scores stored in gender_pca$x
+gender_pca$x
+# Identifying the scores by their gender
+gendertyp_pca <- cbind(data.frame(Gender),gender_pca$x)
+View(gendertyp_pca)
+# Means of scores for all the PC's classified by Gender
+tabmeansPC <- aggregate(gendertyp_pca[,2:5],by=list(Gender=df_1$Gender),mean)
+View(tabmeansPC)
+tabmeansPC <- tabmeansPC[rev(order(tabmeansPC$Gender)),]
+View(tabmeansPC)
+tabfmeans <- t(tabmeansPC[,-1])
+tabfmeans
+colnames(tabfmeans) <- t(as.vector(tabmeansPC[1]$Gender))
+tabfmeans
+# Standard deviations of scores for all the PC's classified by Gender
+tabsdsPC <- aggregate(gendertyp_pca[,2:5],by=list(Gender=df_1$Gender),sd)
+tabfsds <- t(tabsdsPC[,-1])
+colnames(tabfsds) <- t(as.vector(tabsdsPC[1]$Gender))
+tabfsds
+t.test(PC1~df_1$Gender,data=gendertyp_pca)
+t.test(PC2~df_1$Gender,data=gendertyp_pca)
+t.test(PC3~df_1$Gender,data=gendertyp_pca)
+t.test(PC4~df_1$Gender,data=gendertyp_pca)
+## F ratio tests
+var.test(PC1~df_1$Gender,data=gendertyp_pca)
+var.test(PC2~df_1$Gender,data=gendertyp_pca)
+var.test(PC3~df_1$Gender,data=gendertyp_pca)
+var.test(PC4~df_1$Gender,data=gendertyp_pca)
+# Levene's tests (one-sided)
+library(car)
+(LTPC1 <- leveneTest(PC1~df_1$Gender,data=gendertyp_pca))
+(p_PC1_1sided <- LTPC1[[3]][1]/2)
+(LTPC2 <- leveneTest(PC2~df_1$Gender,data=gendertyp_pca))
+(p_PC2_1sided=LTPC2[[3]][1]/2)
+(LTPC3 <- leveneTest(PC3~df_1$Gender,data=gendertyp_pca))
+(p_PC3_1sided <- LTPC3[[3]][1]/2)
+(LTPC4 <- leveneTest(PC4~df_1$Gender,data=gendertyp_pca))
+(p_PC4_1sided <- LTPC4[[3]][1]/2)
+
+# Plotting the scores for the first and second components
+plot(gendertyp_pca$PC1, gendertyp_pca$PC2,pch=ifelse(gendertyp_pca$Gender == "M",1,16),xlab="PC1", ylab="PC2", main="131 people against values for PC1 & PC2")
+abline(h=0)
+abline(v=0)
+legend("bottomleft", legend=c("Male","Female"), pch=c(1,16))
+plot(eigen_gender, xlab = "Component number", ylab = "Component variance", type = "l", main = "Scree diagram")
+plot(log(eigen_gender), xlab = "Component number",ylab = "log(Component variance)", type="l",main = "Log(eigenvalue) diagram")
+print(summary(gender_pca))
+diag(cov(gender_pca$x))
+xlim <- range(gender_pca$x[,1])
+xlim
+gender_pca$x[,1]
+gender_pca$x
+plot(gender_pca$x,xlim=xlim,ylim=xlim)
+gender_pca$rotation[,1]
+gender_pca$rotation
+plot(df_1[,-1])
+gender_pca$x
+plot(gender_pca)
+#get the original value of the data based on PCA
+center <- gender_pca$center
+scale <- gender_pca$scale
+new_gender <- as.matrix(df_1[,-1])
+new_gender
+drop(scale(new_gender,center=center, scale=scale)%*%gender_pca$rotation[,1])
+predict(gender_pca)[,1]
+#The aboved two gives us the same thing. predict is a good function to know.
+df_1$Gender <- as.factor(df_1$Gender)
+out <- sapply(1:4, function(i){plot(df_1$Gender,gender_pca$x[,i],xlab=paste("PC",i,sep=""),ylab="Gender")})
+pairs(gender_pca$x[,1:4], ylim = c(-6,4),xlim = c(-6,4),panel=function(x,y,...){text(x,y,df_1$Gender)})
+
+# Better Ways to Visualize
+
+library(factoextra)
+library(FactoMineR)
+library(ggfortify)
+library(psych)
+library(corrplot)
+library(devtools)
+
+# Correlation
+pairs.panels(df_1[,-1],
+             gap = 0,
+             bg = c("red", "blue")[df_1$Gender],
+             pch=21)
+
+pairs.panels(gender_pca$x,
+             gap=0,
+             bg = c("red", "blue")[df_1$Gender],
+             pch=21)
+
+
+
+
+fviz_eig(gender_pca, addlabels = TRUE)
+fviz_pca_var(gender_pca,col.var = "cos2",
+             gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
+             repel = TRUE)
+fviz_pca_ind(gender_pca, col.ind = "cos2", 
+                  gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"), 
+                  repel = TRUE)
+biplot(gender_pca)
+autoplot(gender_pca,
+         data = df_1[,-1],
+         loadings = TRUE,
+         labels = df_1$Gender)
+
+# Different PCA Method. 
+res.pca <- PCA(df_1[,-1], graph = FALSE)
+print(res.pca)
+
+# Visualize and Interpret PCA using these functions 
+
+#get_eigenvalue(res.pca): Extract the eigenvalues/variances of principal components
+#fviz_eig(res.pca): Visualize the eigenvalues
+#get_pca_ind(res.pca), get_pca_var(res.pca): Extract the results for individuals and variables, respectively.
+#fviz_pca_ind(res.pca), fviz_pca_var(res.pca): Visualize the results individuals and variables, respectively.
+#fviz_pca_biplot(res.pca): Make a biplot of individuals and variables.
+
+eig.val <- get_eigenvalue(res.pca)
+eig.val
+
+fviz_eig(res.pca, addlabels = TRUE, ylim = c(0, 50))
+
+var <- get_pca_var(res.pca)
+#var$coord: coordinates of variables to create a scatter plot
+#var$cos2: represents the quality of representation for variables on the factor map. It’s calculated as the squared coordinates: var.cos2 = var.coord * var.coord.
+#var$contrib: contains the contributions (in percentage) of the variables to the principal components. 
+#The contribution of a variable (var) to a given principal component is (in percentage) : (var.cos2 * 100) / (total cos2 of the component).
+var
+
+# Coordinates
+head(var$coord)
+# Cos2: quality on the factore map
+head(var$cos2)
+# Contributions to the principal components
+head(var$contrib)
+
+#The plot Below is also known as variable correlation plots. It shows the relationships between all variables. It can be interpreted as follow:
+
+#Positively correlated variables are grouped together.
+#Negatively correlated variables are positioned on opposite sides of the plot origin (opposed quadrants).
+#The distance between variables and the origin measures the quality of the variables on the factor map. 
+#Variables that are away from the origin are well represented on the factor map.
+
+# Correlation circle
+fviz_pca_var(res.pca, col.var = "black")
+
+# Quality of representation
+
+
+corrplot(var$cos2, is.corr=FALSE)
+# Total cos2 of variables on Dim.1 and Dim.2
+#A high cos2 indicates a good representation of the variable on the principal component. 
+#In this case the variable is positioned close to the circumference of the correlation circle.
+#A low cos2 indicates that the variable is not perfectly represented by the PCs. 
+#In this case the variable is close to the center of the circle.
+
+fviz_cos2(res.pca, choice = "var", axes = 1:2)
+fviz_pca_var(res.pca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE # Avoid text overlapping
+             )
+# Change the transparency by cos2 values
+fviz_pca_var(res.pca, alpha.var = "cos2")
+corrplot(var$contrib, is.corr=FALSE)
+# Contributions of variables to PC1
+fviz_contrib(res.pca, choice = "var", axes = 1, top = 10)
+# Contributions of variables to PC2
+fviz_contrib(res.pca, choice = "var", axes = 2, top = 10)
+fviz_pca_var(res.pca, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
+             )
+fviz_pca_var(res.pca, alpha.var = "contrib")
+
+fviz_pca_ind(res.pca,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = df_1$Gender, # color by groups
+             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE, # Concentration ellipses
+             legend.title = "Groups"
+             )
+
+
+# Description of PC
+
+res.desc <- dimdesc(res.pca, axes = c(1,2,3,4), proba = 0.05)
+# Description of dimension 1
+res.desc$Dim.1
+res.desc$Dim.2
+res.desc$Dim.3
+res.desc$Dim.4
+
+# Graph of Indiviuals
+ind <- get_pca_ind(res.pca)
+ind
+
+## Principal Component Analysis Results for individuals
+##  ===================================================
+##   Name       Description                       
+## 1 "$coord"   "Coordinates for the individuals" 
+## 2 "$cos2"    "Cos2 for the individuals"        
+## 3 "$contrib" "contributions of the individuals"
+#To get access to the different components, use this:
+
+# Coordinates of individuals
+head(ind$coord)
+# Quality of individuals
+head(ind$cos2)
+# Contributions of individuals
+head(ind$contrib)
+
+fviz_pca_ind(res.pca)
+
+fviz_pca_ind(res.pca, col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE # Avoid text overlapping (slow if many points)
+             )
+fviz_pca_ind(res.pca, pointsize = "cos2", 
+             pointshape = 21, fill = "#E7B800",
+             repel = TRUE # Avoid text overlapping (slow if many points)
+             )
+
+fviz_pca_ind(res.pca, col.ind = "cos2", pointsize = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE # Avoid text overlapping (slow if many points)
+             )
+fviz_cos2(res.pca, choice = "ind")
+# Total contribution on PC1 and PC2
+fviz_contrib(res.pca, choice = "ind", axes = 1:2)
+
+# Create a random continuous variable of length 23,
+# Same length as the number of active individuals in the PCA
+set.seed(123)
+my.cont.var <- rnorm(131)
+# Color individuals by the continuous variable
+fviz_pca_ind(res.pca, col.ind = my.cont.var,
+             gradient.cols = c("blue", "yellow", "red"),
+             legend.title = "Cont.Var")
+
+fviz_pca_ind(res.pca,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = df_1$Gender, # color by groups
+             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE, # Concentration ellipses
+             legend.title = "Groups"
+             )
+
+fviz_pca_ind(res.pca, geom.ind = "point", col.ind = df_1$Gender, 
+             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE, ellipse.type = "confidence",
+             legend.title = "Groups"
+             )
+fviz_pca_ind(res.pca,
+             label = "none", # hide individual labels
+             habillage = df_1$Gender, # color by groups
+             addEllipses = TRUE, # Concentration ellipses
+             palette = "jco"
+             )
+fviz_pca_var(res.pca, geom.var = c("point", "text"))
+# Show individuals text labels only
+fviz_pca_ind(res.pca, geom.ind =  "text")
+# Change the size of arrows an labels
+fviz_pca_var(res.pca, arrowsize = 1, labelsize = 5, 
+             repel = TRUE)
+# Change points size, shape and fill color
+# Change labelsize
+fviz_pca_ind(res.pca, 
+             pointsize = 3, pointshape = 21, fill = "lightblue",
+             labelsize = 5, repel = TRUE)
+
+fviz_pca_ind(res.pca,
+             geom.ind = "point", # show points only (but not "text")
+             group.ind = df_1$Gender, # color by groups
+             legend.title = "Groups",
+             mean.point = FALSE)
+fviz_pca_ind(res.pca,
+             geom.ind = "point", # show points only (but not "text")
+             group.ind = df_1$Gender, # color by groups
+             legend.title = "Groups",
+             mean.point = TRUE)
+fviz_pca_var(res.pca, axes.linetype = "blank")
+
+
+
+ind.p <- fviz_pca_ind(res.pca, geom = "point", col.ind = df_1$Gender)
+ggpubr::ggpar(ind.p,
+              title = "Principal Component Analysis",
+              subtitle = "Gender data set",
+              caption = "Source: factoextra",
+              xlab = "PC1", ylab = "PC2",
+              legend.title = "Gender", legend.position = "top",
+              ggtheme = theme_gray(), palette = "jco"
+              )
+
+fviz_pca_biplot(res.pca, repel = TRUE,col.ind = df_1$Gender,
+                col.var = "#2E9FDF", # Variables color
+                )
+
+fviz_pca_biplot(res.pca, 
+                col.ind = df_1$Gender, palette = "jco", 
+                addEllipses = TRUE, label = "var",
+                col.var = "black", repel = TRUE,
+                legend.title = "Gender") 
+
+fviz_pca_biplot(res.pca, 
+                # Fill individuals by groups
+                geom.ind = "point",
+                pointshape = 21,
+                pointsize = 2.5,
+                fill.ind = df_1$Gender,
+                col.ind = "black",
+                # Color variable by groups
+                legend.title = list(fill = "Gender", color = "Clusters"),
+                repel = TRUE        # Avoid label overplotting
+             )+
+  ggpubr::fill_palette("jco")+      # Indiviual fill color
+  ggpubr::color_palette("npg")      # Variable colors
+
+fviz_pca_biplot(res.pca, 
+                # Individuals
+                geom.ind = "point",
+                fill.ind = df_1$Gender, col.ind = "black",
+                pointshape = 21, pointsize = 2,
+                palette = "jco",
+                addEllipses = TRUE,
+                # Variables
+                alpha.var ="contrib", col.var = "contrib",
+                gradient.cols = "RdYlBu",
+                
+                legend.title = list(fill = "Gender", color = "Contrib",
+                                    alpha = "Contrib")
+                )
+
+## http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/
+
+```
