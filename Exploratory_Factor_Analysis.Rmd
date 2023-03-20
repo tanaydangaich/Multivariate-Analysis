@@ -1,0 +1,104 @@
+---
+title: "Exploratory_Factor_Analysis"
+output: html_document
+date: "03/15/2023"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Importing the complete fish dataset
+  
+```{r}
+library(psych)
+library(readr)
+
+fish <- read_csv("~/Documents/Courses/Multivariate Analysis/Fish.csv")
+str(fish)
+attach(fish)
+View(fish)
+
+```
+
+## Using the varimax method
+
+#### RC values, h2 & u2 values
+
+```{r}
+fit.pc <- principal(fish[-1], nfactors=4, rotate="varimax")
+fit.pc
+```
+
+* h2 - Explained variance
+* u2 - Unexplained variance
+* h2 nd u2 add up to 1
+* The Proportion explained shows us the PCA values
+
+#### Eigen Values
+
+```{r}
+fit.pc$values
+round(fit.pc$values, 3)
+```
+
+* The above are the eigen values.
+
+#### Clubbing columns to RCs
+
+```{r}
+fit.pc$loadings
+```
+
+* We need to look for values over 0.5
+* RC1 shows relation with Weight, Length1, Length2 and Length3.
+* RC2 shows relation with Height --> I can take height directly.
+* RC3 shows relation with Width --> I can take width directly.
+* RC4 shows no relation.
+
+#### Loadings with more digits
+
+```{r}
+for (i in c(1,3,2,4)) { print(fit.pc$loadings[[1,i]])}
+```
+
+#### Communalities
+
+```{r}
+fit.pc$communality
+```
+
+#### Rotated factor scores, Notice the columns ordering: RC1, RC2, RC4 and RC3
+
+```{r}
+fit.pc$scores
+```
+
+#### Factor Recommendation
+
+```{r}
+fa.parallel(fish[-1])
+```
+
+* Plot shows elbow at 2
+
+#### Correlations within Factors
+
+```{r}
+fa.plot(fit.pc)
+```
+
+#### Visualizing the relationship
+
+```{r}
+fa.diagram(fit.pc)
+```
+* RC1 is weight and all length factors as confirmed by component analysis.
+
+#### Factor recommendations for a simple structure
+
+```{r}
+vss(fish[-1])
+```
+
+* Till 2 there is change, from 2 no change.
+* This is how we decide number of factors.
+* For fish dataset, ideal number of factors are 2.
