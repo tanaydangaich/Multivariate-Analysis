@@ -1,0 +1,456 @@
+---
+title: "fish regression"
+output: html_document
+date: "2023-04-13"
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: sentence
+---
+
+```{r}
+library(readr)
+library(GGally)
+library(car)
+library(glmnet)
+library(caret)
+library(gvlma)
+library(rsq)
+```
+
+```{r}
+fish <- read_csv("~/Documents/Courses/Multivariate Analysis/Fish.csv")
+View(fish)
+summary(fish)
+colSums(is.na(fish))
+```
+
+```{r}
+# Create dummy variables using the dummyVars function
+dummy_df <- dummyVars("~ Species", data = fish)
+
+# Apply the dummy variables to the original data frame
+transformed_df <- predict(dummy_df, newdata = fish[1])
+
+# View the transformed data frame
+head(transformed_df)
+
+df <- cbind(fish, transformed_df)
+df
+```
+
+> Train_test split
+
+```{r}
+trainIndex <- createDataPartition(df$Weight, p = 0.7, list = FALSE)
+trainData <- df[trainIndex, ]
+testData <- df[-trainIndex, ]
+```
+
+> Using regression to predict weight with respect to length1, length2, length3, height and width
+
+```{r}
+plot(fish[-1])
+```
+
+> From the above graph I understand that the weight is positively correlated with other variables.
+
+```{r}
+ggpairs(data=fish[-1], title="Fish")
+```
+
+> Used this to get exact values of correlation.
+> We can go ahead with multiple linear regression to predict weight of the fish.
+
+```{r}
+fish.all.reg <- lm(Weight~Length1 + Length2 + Length3 + Height + Width, data=trainData)
+summary(fish.all.reg)
+```
+
+> According to the regression report, we can see that there is a strong influence of height to weight of the fish.
+> The model accuracy is 89.81% when we use Length1 + Length2 + Length3 + Height + Width as Xi to predict weight of fish.
+> As the length of the fish increases, weight increases.
+> Length2 has a very high p-value which means that it has very little to no impact on the prediction.
+> Generally 0.05 p-value is considered good, we can see that only height has \<0.05 p-value.
+
+```{r}
+fish.allsp.reg <- lm(Weight~Length1 + Length2 + Length3 + Height + Width + SpeciesBream + SpeciesParkki + SpeciesPerch + SpeciesPike + SpeciesRoach + SpeciesSmelt + SpeciesWhitefish, data=trainData)
+summary(fish.allsp.reg)
+```
+
+> The R-squared value is 93.66 and f-stat is 151.4 on 11 and 101 DF
+
+```{r}
+fish.sel.reg <- lm(Weight~Length1 + Length2 + Length3 + SpeciesParkki + SpeciesPerch + SpeciesPike + SpeciesSmelt + SpeciesWhitefish, data=trainData)
+summary(fish.sel.reg)
+```
+
+> Adjusted R-squared: 93.66 F-statistic: 207.8 on 8 and 104 DF
+
+```{r}
+fish.sel2.reg <- lm(Weight~Length1 + Length2 + SpeciesParkki + SpeciesPike + SpeciesSmelt, data=trainData)
+summary(fish.sel2.reg)
+```
+
+> Adjusted R-squared: 0.9378 F-statistic: 338.8 on 5 and 107 DF
+
+> Let us try to build a model with just height of fish to predict the weight and check if its a better model.
+
+```{r}
+fish.height.reg <- lm(Weight~Height, data=trainData)
+summary(fish.height.reg)
+```
+
+> We can understand that height is not accurate enough to determine the weight of the fish.
+> The f-stat tells us that this regression does not capture significant amount of the varaince in the data.
+> Hence, it the worst performing model.
+> Let us try to build a model with Height and Length3 as Xi.
+
+```{r}
+fish.hl3.reg <- lm(Weight~Height + Length3, data=trainData)
+summary(fish.hl3.reg)
+```
+
+> This model has 85.23% accuracy with 2 independant variables.
+> Comparing this with fish.all.reg which had R-squared of 89.81% with 5 independant variables, this model seems pretty close.
+> The f-test tells us that this model captures more variance than the fish.all.reg hence being a better model overall even though it does not have the highest R-squared.
+> F-stat of this model = 324.2 on 2 and 110 DF.
+> Let us try with Xi = Height + Length3 + Length1.
+
+```{r}
+fish.hl13.reg <- lm(Weight~Height + Length3 + Length1, data=trainData)
+summary(fish.hl13.reg)
+```
+
+> This model has R-squared of 89.37% which is greater than the previous model with 2 independant variables.
+> F-stat = 315.1 on 3 and 109 DF Both models (fish.hl3.reg, fish.hl13.reg and fish.sel2.reg) seem like a good fit.
+> To understand it better, let us check the AIC scores.
+
+```{r}
+AIC(fish.hl3.reg)
+AIC(fish.hl13.reg)
+AIC(fish.sel2.reg)
+AIC(fish.allsp.reg)
+```
+
+> According to AIC scores, model 3 is a better fit.
+> Let us try BIC scores.
+
+```{r}
+BIC(fish.hl3.reg)
+BIC(fish.hl13.reg)
+BIC(fish.sel2.reg)
+BIC(fish.allsp.reg)
+```
+
+> According to BIC scores, model 3 is a better fit.
+> Let us try residual plots.
+
+```{r}
+plot(fish.all.reg, which = 1)
+plot(fish.hl3.reg, which = 1)
+plot(fish.hl13.reg, which = 1)
+plot(fish.sel2.reg, which = 1)
+```
+
+> Check for homoscedasticity by non-constant error variance test
+
+```{r}
+ncvTest(fish.hl3.reg)
+ncvTest(fish.hl13.reg)
+ncvTest(fish.sel2.reg)
+```
+
+> Model2 has p-value \< 0.05 proving that hetroscedasticity exists i.e the model is biased to certain parts of the data and does not assume equal variance.
+> In fish.sel2.reg -\> homoscedasticity
+
+> Check for Autocorrelated Errors
+
+```{r}
+durbinWatsonTest(fish.hl3.reg)
+durbinWatsonTest(fish.hl13.reg)
+durbinWatsonTest(fish.sel2.reg)
+durbinWatsonTest(fish.allsp.reg)
+```
+
+> Model 3 has least level of autocorrelation.
+> Model 2 has some level of autocorrelation but is not very significant.
+> Model 1 has significant autocorrelation errors.
+
+> Global test of model assumptions
+
+```{r}
+gv.hl3 <- gvlma(fish.hl3.reg)
+summary(gv.hl3)
+
+gv.hl13 <- gvlma(fish.hl13.reg)
+summary(gv.hl13)
+
+gv.sel2 <- gvlma(fish.sel2.reg)
+summary(gv.sel2)
+
+```
+
+> Assumptions except Kurtosis are not sastisfied in Model 1 and 2.
+> Hence they may not be the best fit for the data.
+> Model 3 satisfies Kurtosis and Homoscedasticity.
+> Check for outliers
+
+```{r}
+outlierTest(fish.hl3.reg)
+outlierTest(fish.hl13.reg)
+outlierTest(fish.sel2.reg)
+```
+
+> Bonferroni value for Model 3 is significant
+
+> Let us do influence plot to deepen our understanding.
+
+```{r}
+influencePlot(fish.hl3.reg, id.method="identify", main="Influence Plot", sub="Circle size is proportial to Cook's Distance" )
+influencePlot(fish.hl13.reg, id.method="identify", main="Influence Plot", sub="Circle size is proportial to Cook's Distance" )
+influencePlot(fish.sel2.reg, id.method="identify", main="Influence Plot", sub="Circle size is proportial to Cook's Distance" )
+```
+
+> Points in the top right corner are outliers having high impact on the regression but I can not understand why.
+> Lets check VIF scores to evaluate multicollinearity in the model.
+
+```{r}
+vif(fish.hl3.reg) # variance inflation factors
+vif(fish.hl13.reg)
+vif(fish.sel2.reg)
+```
+
+> VIF of model 1 is \<5 indicating that there is no significant multicollinearity between predictor varaibles VIF of model 2 and 3 is \>5 indicating severe multicollinearity between predictor variables.
+> We have to reduce the impact of outliers in our model to make it more robust.
+> Also, Length1 and Length3 predictors are highly correlated.
+
+> Hence we will use Lasso regression.
+
+> Lasso on Model 1 - Weight \~ Length3 + Height + Length1 Train
+
+```{r}
+X <- trainData[, c("Length3", "Height", "Length1")]
+Y <- trainData[, 2]
+X <- as.matrix(X)
+Y <- as.numeric(Y)
+str(X)
+str(Y)
+cor(X)
+
+lasso.hl13 <- glmnet(X, Y, alpha = 1, lambda = 0.1)
+lasso.hl13
+coef(lasso.hl13)
+```
+
+> Length3 has a negative coefficient of -60.36, which means that an increase in Length3 is associated with a decrease in the response variable.
+
+> Height has a positive coefficient of 52.88, which means that an increase in Height is associated with an increase in the response variable.
+
+> Length1 has the largest positive coefficient of 84.87, which suggests that it has the strongest positive association with the response variable among the three predictor variables.
+
+> 89.64% of the variance is explained when I am taking X \~ Height + Length3 + Length1 (model 2) while a multicollinearity in data.
+
+> Now let us try ridge regression to check if it performs better than lasso regression. Train
+
+```{r}
+ridge.hl13 <- glmnet(X, Y, alpha = 0, lambda = 0.1)
+ridge.hl13
+coef(ridge.hl13)
+```
+
+> Length3 has a negative coefficient of -56.63, which means that an increase in Length3 is associated with a decrease in the response variable.
+
+> Height has a positive coefficient of 51.45, which means that an increase in Height is associated with an increase in the response variable.
+
+> Length1 has the largest positive coefficient of 80.93, which suggests that it has the strongest positive association with the response variable among the three predictor variables.
+
+> 89.61% of the variance is explained when I am taking X \~ Height + Length3 + Length1 (model 2) while accounting for multicollinearity in data.
+
+> Lasso regression explains variance a little better than ridge regression.
+
+> Lasso on Model 3 - Weight \~ Length1+Length2+SpeciesParkki+SpeciesPike+SpeciesSmelt Train
+
+```{r}
+X2 <- trainData[, c("Length1", "Length2", "SpeciesParkki","SpeciesPike","SpeciesSmelt")]
+Y2 <- trainData[, 2]
+X2 <- as.matrix(X2)
+Y2 <- as.numeric(Y2)
+str(X2)
+str(Y2)
+cor(X2)
+
+lasso.sel2 <- glmnet(X2, Y2, alpha = 1, lambda = 0.1)
+lasso.sel2
+coef(lasso.sel2)
+```
+
+> Length1 has a negative coefficient of -34.66, which means that an increase in Length1 is associated with a decrease in the response variable.
+
+> Length2 has a positive coefficient of 73.34, which means that an increase in Length2 is associated with an increase in the response variable.
+
+> SpeciesParkkhi has a positive coefficient of 72.04, which means that an increase in SpeciesParkkhi is associated with an increase in the response variable.
+
+> SpeciesPike has the largest negative coefficient of -378.58, which suggests that it has the strongest negative association with the response variable among the 5 predictor variables.
+
+> SpeciesSmelt has the largest positive coefficient of 280.95, which suggests that it has the strongest positive association with the response variable among the 5 predictor variables.
+
+> 93.95% of the variance is explained when I am taking X \~ Length1+Length2+SpeciesParkki+SpeciesPike+SpeciesSmelt (model 3) while accounting for multicollinearity in data.
+
+> Now let us try ridge regression to check if it performs better than lasso regression. Train
+
+```{r}
+ridge.sel2 <- glmnet(X2, Y2, alpha = 0, lambda = 0.1)
+ridge.sel2
+coef(ridge.sel2)
+```
+
+> This explain a little less than Lasso regression.
+
+> K-fold cross-validation for X and Y (Model 1)
+
+```{r}
+#perform k-fold cross-validation to find optimal lambda value
+cv_model <- cv.glmnet(as.matrix(X), as.matrix(Y), alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda <- cv_model$lambda.min
+best_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_model)
+```
+
+> K-fold cross-validation for X2 and Y2 (Model 2)
+
+```{r}
+#perform k-fold cross-validation to find optimal lambda value
+cv_model2 <- cv.glmnet(as.matrix(X2), as.matrix(Y2), alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda2 <- cv_model2$lambda.min
+best_lambda2
+
+#produce plot of test MSE by lambda value
+plot(cv_model2)
+```
+
+> Prediction using Weight \~ Height + Length3 + Length1 model1 (lasso.hl13)
+
+```{r}
+X_test <- testData[, c("Length1", "Length3", "Height")]
+Y_test <- testData[, 2]
+X_test <- as.matrix(X_test)
+Y_test <- as.numeric(Y_test)
+str(X_test)
+str(Y_test)
+
+lasso.pred <- predict(lasso.hl13, s = best_lambda, newx = as.matrix(X_test))
+lasso.pred
+
+mse <- mean((Y_test - lasso.pred[1])^2)
+mse
+
+rmse <- sqrt(mse)
+rmse
+
+mae <- mean(abs(Y_test - lasso.pred[1]))
+mae
+
+ss_res <- sum((Y_test - lasso.pred[1])^2)
+ss_tot <- sum((Y_test - mean(Y_test))^2)
+r2 <- 1 - ss_res/ss_tot
+r2
+```
+
+> This value indicates that this model is a bad fit for the model.
+
+> Prediction using Weight ~ Length1 + Length2 + SpeciesParkki + SpeciesPike + SpeciesSmelt  model2 (lasso.sel2)
+
+```{r}
+X2_test <- testData[, c("Length1", "Length2", "SpeciesParkki","SpeciesPike","SpeciesSmelt")]
+Y2_test <- testData[, 2]
+X2_test <- as.matrix(X2_test)
+Y2_test <- as.numeric(Y2_test)
+str(X2_test)
+str(Y2_test)
+
+lasso.pred2 <- predict(lasso.sel2, s = best_lambda2, newx = as.matrix(X2_test))
+lasso.pred2
+
+mse <- mean((Y2_test - lasso.pred2[1])^2)
+mse
+
+rmse <- sqrt(mse)
+rmse
+
+mae <- mean(abs(Y2_test - lasso.pred2[1]))
+mae
+
+ss_res <- sum((Y2_test - lasso.pred2[1])^2)
+ss_tot <- sum((Y2_test - mean(Y2_test))^2)
+r2 <- 1 - ss_res/ss_tot
+r2
+```
+
+> This value indicates that this model is a bad fit for the model but a little better than the previous model.
+
+> Let us try for a model which will take all values as X and predict weight.
+
+```{r}
+X3 <- trainData[-1]
+Y3 <- trainData[, 2]
+str(X3)
+str(Y3)
+cor(X3)
+
+lasso.allsp <- glmnet(X3, Y3, alpha = 1, lambda = 0.1)
+lasso.allsp
+coef(lasso.allsp)
+```
+
+```{r}
+#perform k-fold cross-validation to find optimal lambda value
+cv_model3 <- cv.glmnet(as.matrix(X3), as.matrix(Y3), alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lambda3 <- cv_model3$lambda.min
+best_lambda3
+
+#produce plot of test MSE by lambda value
+plot(cv_model3)
+```
+
+```{r}
+X3_test <- testData[-1]
+Y3_test <- testData[, 2]
+X3_test <- as.matrix(X3_test)
+Y3_test <- as.numeric(Y3_test)
+str(X3_test)
+str(Y3_test)
+
+lasso.pred3 <- predict(lasso.allsp, s = best_lambda3, newx = as.matrix(X3_test))
+lasso.pred3
+
+mse <- mean((Y3_test - lasso.pred3[1])^2)
+mse
+
+rmse <- sqrt(mse)
+rmse
+
+mae <- mean(abs(Y3_test - lasso.pred3[1]))
+mae
+
+ss_res <- sum((Y3_test - lasso.pred3[1])^2)
+ss_tot <- sum((Y3_test - mean(Y3_test))^2)
+r2 <- 1 - ss_res/ss_tot
+r2
+```
+
+> This model too is a bad fit.
+
+
+> The model best suited for prediction of weight of the fish was where the independant variables were - Length1 (Vertical length) + Length2 (diagonal length) + SpeciesParkki + SpeciesPike + SpeciesSmelt.
+> Diagonal width does not make a huge contribution in predicting the weight of the fish.
+> Suprisingly, the 3 types of species is enough to get a good prediction model. 
+> The F-statistic being 301.3 on 5 and 107 DF, p-value < 2.2e-16 and R-squared > 0.93. 
