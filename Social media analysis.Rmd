@@ -1,0 +1,170 @@
+---
+title: "Social media analysis"
+output: html_document
+date: "2023-04-23"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(readr)
+library(readr)
+library(MVA)
+library(pROC)
+library(HSAUR2)
+library(SciViews)
+library(scatterplot3d)
+library(car)
+library(lattice)
+library(GGally)
+library(caTools)
+library(ggplot2)
+library(ggridges)
+library(ggvis)
+library(ggcorrplot)
+library(ggthemes)
+library(cowplot)
+library(gapminder)
+library(gganimate)
+library(dplyr)
+library(tidyverse)
+library(grid)
+library(gridExtra)
+library(RColorBrewer)
+library(Hotelling)
+library(stats)
+library(biotools)
+library(factoextra)
+library(FactoMineR)
+library(ggfortify)
+library(psych)
+library(cluster)
+library(corrplot)
+library(caret)
+```
+
+
+```{r}
+smedia = read_csv('~/Documents/Courses/Multivariate Analysis/Class project /Class_Survey.csv')
+View(smedia)
+
+colSums(is.na(smedia)) #Replacing missing data with mean of the column
+smedia %>% 
+  mutate_if(is.numeric, ~replace_na(.,mean(., na.rm = TRUE)))
+```
+```{r}
+plot(smedia[-1]) #There is no linear relationship between the variables 
+ggpairs(data=smedia[-1:-2], title="Social Media")
+```
+
+> There is a positive correlation between -
+
+1. Linkedin and Social Media screen time
+2. WeChat and TikTok
+3. Twitter and Facebook/ Messenger
+4. LinkedIn and Snapchat 
+5. Snapchat and Social media screen time 
+6. BeReal and Snapchat
+7. Instagram and number of times opened
+8. Social Media screen time and Instagram
+9. Instagram and WhatsApp
+10. Social Media screen time and WhatsApp
+
+> There is a negative correlation between -
+
+1. Telegram and Instagram
+2. TikTok and WhatsApp
+3. WeChat and WhatsApp
+
+
+> Addiction is considered when number of times we have opened our apps are greater than 105.
+
+> We can see that Instagram is correlated with number of times screen opened, which means it has a significant contribution towards users having social media addiction. 
+
+> Why is that? What factors are making users open Instagram frequently and not the other social media apps?
+
+
+
+```{r}
+# Load the dataset
+
+# Convert the "Social Media Addiction" column to a binary variable
+smedia$addiction <- ifelse(smedia$`Social Media Addiction` == "Addicted", 1, 0)
+smedia = smedia[, -16]
+smedia = smedia[, -15]
+# Split the data into training and testing sets
+set.seed(123)
+split <- sample.split(smedia$addiction, SplitRatio = 0.8)
+train <- subset(smedia[, -1:-2], split == TRUE)
+test <- subset(smedia[, -1:-2], split == FALSE)
+
+# Fit a logistic regression model on the training data
+model <- glm(addiction ~ ., data = train, family = binomial)
+
+# Print the summary of the model
+summary(model)
+
+# Make predictions on the test data
+predictions <- predict(model, newdata = test, type = "response")
+
+# Convert the probabilities to binary predictions
+predicted_classes <- ifelse(predictions > 0.5, 1, 0)
+
+# Calculate the accuracy of the model on the test data
+conf_mat <- table(predicted_classes, test$addiction)
+conf_mat
+
+accuracy <- sum(diag(conf_mat)) / sum(conf_mat)
+accuracy
+```
+
+> I performed logisitic regression with X ~ Number of hours on each app and its total. 
+
+> Accuracy: 76.47%
+
+> Simple logistic model just on the basis of total number of hours spent on social media
+
+```{r}
+# Fit a logistic regression model on the training data
+s_model <- glm(addiction ~ `Total Social Media Screen Time (hrs)`, data = train, family = binomial)
+
+# Print the summary of the model
+summary(s_model)
+
+# Make predictions on the test data
+s_predictions <- predict(s_model, newdata = test, type = "response")
+
+# Convert the probabilities to binary predictions
+s_predicted_classes <- ifelse(s_predictions > 0.5, 1, 0)
+
+# Calculate the accuracy of the model on the test data
+s_conf_mat <- table(s_predicted_classes, test$addiction)
+s_conf_mat
+
+s_accuracy <- sum(diag(s_conf_mat)) / sum(s_conf_mat)
+s_accuracy
+```
+
+> Accuracy: 68.57%
+
+> Total Social Media Screen Time (hrs) vs. addiction
+
+```{r}
+ggplot(train, aes(x = `Total Social Media Screen Time (hrs)`, y = addiction)) +
+  geom_point() +
+  stat_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
+```
+
+> ROC curve of model 1
+
+```{r}
+roc(train$addiction,model$fitted.values,plot=TRUE, legacy.axes=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage", col="#377eb8", lwd=4)
+```
+
+> ROC and AUC of both models
+
+```{r}
+roc(train$addiction, model$fitted.values, plot=TRUE, legacy.axes=TRUE, percent=TRUE, xlab="False Positive Percentage", ylab="True Postive Percentage", col="#377eb8", lwd=4, print.auc=TRUE)
+plot.roc(train$addiction, s_model$fitted.values, percent=TRUE, col="#4daf4a", lwd=4, print.auc=TRUE, add=TRUE, print.auc.y=40)
+```
+
